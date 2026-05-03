@@ -58,7 +58,9 @@ const Admin = () => {
     tag: ''
   });
   const [productImages, setProductImages] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -183,33 +185,42 @@ const Admin = () => {
     }
   };
 
+  // ── Cloudinary upload (no Supabase storage used) ──
+  const CLOUDINARY_CLOUD = 'dqdsyh4n0';
+  const CLOUDINARY_PRESET = 'ml_defaulthafiz';
+
+  const uploadToCloudinary = async (file, index, total) => {
+    setUploadProgress(`Uploading image ${index + 1} of ${total}...`);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    formData.append('folder', 'hafiz-g-mobile/products');
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`,
+      { method: 'POST', body: formData }
+    );
+    if (!res.ok) throw new Error('Cloudinary upload failed');
+    const data = await res.json();
+    return data.secure_url;
+  };
+
   const handleCreateProduct = async (e) => {
     e.preventDefault();
     setUploadingImages(true);
-    
-    // Upload images to Supabase Storage
+    setUploadProgress('');
+
+    // Upload images to Cloudinary (free 25 GB CDN)
     const imageUrls = [];
-    for (const file of productImages) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-        
-      if (uploadError) {
-        alert('Error uploading image: ' + uploadError.message);
-        continue;
+    for (let i = 0; i < productImages.length; i++) {
+      try {
+        const url = await uploadToCloudinary(productImages[i], i, productImages.length);
+        imageUrls.push(url);
+      } catch (err) {
+        alert('Error uploading image ' + (i + 1) + ': ' + err.message);
       }
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-        
-      imageUrls.push(publicUrl);
     }
-    
+
+    setUploadProgress('Saving product...');
     const { error } = await supabase
       .from('products')
       .insert([{ ...newProduct, images: imageUrls }]);
@@ -220,8 +231,10 @@ const Admin = () => {
       setShowAddProductModal(false);
       setNewProduct({ name: '', description: '', price: '', rating: 5.0, tag: '' });
       setProductImages([]);
+      setPreviewUrls([]);
       fetchProducts();
     }
+    setUploadProgress('');
     setUploadingImages(false);
   };
 
@@ -584,28 +597,39 @@ const Admin = () => {
                 </div>
               </div>
               <div className="input-group">
-                <label>Product Images (Select multiple)</label>
+                <label>Product Images — uploaded to Cloudinary CDN</label>
                 <div className="file-upload-wrapper">
                   <input 
                     type="file" 
                     multiple 
                     accept="image/*"
-                    onChange={(e) => setProductImages(Array.from(e.target.files))}
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files);
+                      setProductImages(files);
+                      setPreviewUrls(files.map(f => URL.createObjectURL(f)));
+                    }}
                     className="file-input"
                     id="product-images"
                     required
                   />
                   <label htmlFor="product-images" className="file-upload-label">
                     <UploadCloud size={24} />
-                    <span>{productImages.length > 0 ? `${productImages.length} images selected` : 'Click to select images'}</span>
+                    <span>{productImages.length > 0 ? `${productImages.length} image${productImages.length > 1 ? 's' : ''} selected` : 'Click to select images'}</span>
                   </label>
                 </div>
+                {previewUrls.length > 0 && (
+                  <div className="image-previews">
+                    {previewUrls.map((url, i) => (
+                      <img key={i} src={url} alt={`preview-${i}`} className="preview-thumb" />
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="modal-actions">
                 <button type="button" className="btn btn-text" onClick={() => setShowAddProductModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={uploadingImages}>
-                  {uploadingImages ? 'Uploading Images...' : 'Create Product'}
+                  {uploadingImages ? (uploadProgress || 'Uploading...') : 'Create Product'}
                 </button>
               </div>
             </form>

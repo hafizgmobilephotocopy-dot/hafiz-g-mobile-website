@@ -107,25 +107,41 @@ const ProductCard = ({ product }) => {
   );
 };
 
+const PAGE_SIZE = 20;
+
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  const fetchProducts = async (pageNum) => {
+    setLoading(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    const { data, error, count } = await supabase
+      .from('products')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (!error && data) {
+      setProducts(data);
+      setTotalCount(count || 0);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setProducts(data);
-      }
-      setLoading(false);
-    };
-    
-    fetchProducts();
-  }, []);
+    fetchProducts(page);
+  }, [page]);
+
+  const handlePrev = () => setPage(p => Math.max(0, p - 1));
+  const handleNext = () => setPage(p => Math.min(totalPages - 1, p + 1));
 
   return (
     <div className="shop-page animate-fade-in">
@@ -147,15 +163,53 @@ const Shop = () => {
       <section className="shop-products">
         <div className="container">
           {loading ? (
-            <div className="text-center" style={{ padding: '4rem 0', color: 'var(--text-secondary)' }}>
-              Loading premium products...
+            <div className="shop-loading">
+              <div className="loading-spinner" />
+              <p>Loading products...</p>
             </div>
           ) : products.length > 0 ? (
-            <div className="products-grid">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="shop-meta">
+                <span>{totalCount} product{totalCount !== 1 ? 's' : ''} available</span>
+                {totalPages > 1 && (
+                  <span>Page {page + 1} of {totalPages}</span>
+                )}
+              </div>
+              <div className="products-grid">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    className="page-btn"
+                    onClick={handlePrev}
+                    disabled={page === 0}
+                  >
+                    ← Prev
+                  </button>
+                  <div className="page-numbers">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button
+                        key={i}
+                        className={`page-num ${i === page ? 'active' : ''}`}
+                        onClick={() => setPage(i)}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    className="page-btn"
+                    onClick={handleNext}
+                    disabled={page >= totalPages - 1}
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center" style={{ padding: '4rem 0', color: 'var(--text-secondary)' }}>
               No products available at the moment. Please check back later.
