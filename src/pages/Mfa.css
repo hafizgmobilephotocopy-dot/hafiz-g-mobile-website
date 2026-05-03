@@ -1,0 +1,26 @@
+.mfa-desc {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.text-2xl { font-size: 1.5rem; }
+.tracking-widest { letter-spacing: 0.5em; }
+.text-center { text-align: center; }
+.mt-4 { margin-top: 1rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.opacity-60 { opacity: 0.6; }
+.w-full { width: 100%; }
+
+.qr-container svg {
+  display: block;
+}
+
+.secret-text code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  color: var(--secondary);
+}
