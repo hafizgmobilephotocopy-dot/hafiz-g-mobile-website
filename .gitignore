@@ -3,9 +3,8 @@ dist
 .env
 .env.local
 .DS_Store
-
 push.cjs
-
 mingit/
 mingit.zip
-*.json
+css_contents.json
+src_dump.json
