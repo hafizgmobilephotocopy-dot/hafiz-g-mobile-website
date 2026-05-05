@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Smartphone, FileText, Car, Fingerprint, Zap } from 'lucide-react';
+import { ShieldCheck, Smartphone, FileText, Car, Fingerprint, Zap, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
@@ -58,6 +58,10 @@ const Home = () => {
               Experience premium mobile services, doorstep biometrics, E-stamp printing, and seamless vehicle transfers in Shadman, Lahore.
             </p>
             <div className="hero-actions">
+              <Link to="/shop" className="btn btn-shop-now">
+                <ShoppingBag size={20} />
+                Shop Now
+              </Link>
               <a href="#services" className="btn btn-primary">Explore Services</a>
               <Link to="/track" className="btn btn-outline">Track Transfer</Link>
             </div>
