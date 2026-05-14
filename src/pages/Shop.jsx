@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Star, ChevronRight, ChevronLeft, Minus, Plus, MessageCircle, X } from 'lucide-react';
+import { ShoppingBag, Star, ChevronRight, ChevronLeft, Minus, Plus, MessageCircle, X, ShoppingCart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useCart } from '../context/CartContext';
 import './Shop.css';
 
 const WHATSAPP_NUMBER = '923212627997';
@@ -9,6 +10,7 @@ const ProductCard = ({ product }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showOrder, setShowOrder] = useState(false);
   const [qty, setQty] = useState(1);
+  const { addToCart } = useCart();
   const images = product.images && product.images.length > 0
     ? product.images
     : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80'];
@@ -21,6 +23,10 @@ const ProductCard = ({ product }) => {
   const prevImage = (e) => {
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleAddToCart = () => {
+    addToCart(product, 1);
   };
 
   const handleBuyNow = () => {
@@ -75,8 +81,11 @@ const ProductCard = ({ product }) => {
         {!showOrder ? (
           <div className="product-footer">
             <span className="product-price">{product.price}</span>
-            <button className="btn btn-primary btn-sm add-to-cart" onClick={handleBuyNow}>
-              <ShoppingBag size={18} />
+            <button className="btn btn-primary btn-sm add-to-cart" onClick={handleAddToCart}>
+              <ShoppingCart size={18} />
+              Add to Cart
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={handleBuyNow}>
               Buy Now
             </button>
           </div>

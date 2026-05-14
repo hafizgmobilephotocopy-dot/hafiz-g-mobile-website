@@ -7,25 +7,28 @@ import Shop from './pages/Shop';
 import TrackStatus from './pages/TrackStatus';
 import Admin from './pages/Admin';
 import WhatsAppButton from './components/WhatsAppButton';
+import { CartProvider } from './context/CartContext';
 import './App.css'; // Just basic app styles if needed
 
 function App() {
   return (
-    <Router>
-      <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <Navbar />
-        <main style={{ flex: 1, paddingBottom: '4rem' }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/track" element={<TrackStatus />} />
-            <Route path="/admin/*" element={<Admin />} />
-          </Routes>
-        </main>
-        <Footer />
-        <WhatsAppButton />
-      </div>
-    </Router>
+    <CartProvider>
+      <Router>
+        <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <Navbar />
+          <main style={{ flex: 1, paddingBottom: '4rem' }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/track" element={<TrackStatus />} />
+              <Route path="/admin/*" element={<Admin />} />
+            </Routes>
+          </main>
+          <Footer />
+          <WhatsAppButton />
+        </div>
+      </Router>
+    </CartProvider>
   );
 }
 
